@@ -5,6 +5,17 @@
 #include <iostream>
 using namespace std;
 
+// New stuff
+const int P_POT = 34;
+const int P_OPEN = 0;
+const int P_CLOSE = 4;
+
+int isOpen = 1;
+
+void motorOpen();
+void motorClose();
+void motorRun();
+
 // sets input pins
 constexpr byte ZERO_PIN = 16;
 constexpr byte ONE_PIN = 17;
@@ -33,18 +44,16 @@ bool ninePinState;
 bool resetPinState;
 bool enterPinState;
 
-
 // set the LCD number of columns and rows
 int lcdColumns = 16;
 int lcdRows = 2;
 
 // set LCD address, number of columns and rows
 // if you don't know your display address, run an I2C scanner sketch
-LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);  
+LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 
-
-
-void setup(){
+void setup()
+{
   // enable Serial
   Serial.begin(9600);
 
@@ -61,33 +70,33 @@ void setup(){
   pinMode(NINE_PIN, INPUT_PULLUP);
   pinMode(RESET_PIN, INPUT_PULLUP);
   pinMode(ENTER_PIN, INPUT_PULLUP);
+  pinMode(P_OPEN, OUTPUT);
+  pinMode(P_CLOSE, OUTPUT);
 
   // initialize LCD
   lcd.init();
-  // turn on LCD backlight                      
+  // turn on LCD backlight
   lcd.backlight();
 }
 
-
 String inputString = String("");
-String password = String("7355608");
+String password = String("1111");
 
 uint32_t KEYPAD_DELAY_TIME = 225;
 
-
-
-void keypadNumber(int key) {
+void keypadNumber(int key)
+{
   Serial.print(key);
   Serial.println(" SWITCH IS DOWN");
   inputString += key;
-  //Serial.println(inputString.length());
-  //lcd.clear();
+  // Serial.println(inputString.length());
+  // lcd.clear();
   lcd.print(inputString);
   delay(KEYPAD_DELAY_TIME);
 }
 
-
-void loop(){
+void loop()
+{
   lcd.setCursor(0, 0);
   lcd.print("Enter Password: ");
   lcd.setCursor(0, 1);
@@ -106,13 +115,18 @@ void loop(){
   resetPinState = digitalRead(RESET_PIN);
   enterPinState = digitalRead(ENTER_PIN);
 
-  if (enterPinState == LOW){
+  if (enterPinState == LOW)
+  {
     Serial.println("Password");
-    if(inputString == password){
+    if (inputString == password)
+    {
       lcd.clear();
       lcd.print("Correct");
+      motorRun();
       delay(3000);
-    } else {
+    }
+    else
+    {
       lcd.clear();
       lcd.print("Wrong");
       delay(3000);
@@ -122,8 +136,9 @@ void loop(){
     lcd.print(inputString);
     delay(KEYPAD_DELAY_TIME);
   }
-  
-  else if (resetPinState == LOW){
+
+  else if (resetPinState == LOW)
+  {
     Serial.println("reset!");
     inputString = "";
     Serial.println(inputString.length());
@@ -133,39 +148,97 @@ void loop(){
   }
 
   // print if switch is down
-  else if(zeroPinState == LOW) {
+  else if (zeroPinState == LOW)
+  {
     keypadNumber(0);
   }
-  else if(onePinState == LOW) {
+  else if (onePinState == LOW)
+  {
     keypadNumber(1);
   }
 
-  else if(twoPinState == LOW) {
+  else if (twoPinState == LOW)
+  {
     keypadNumber(2);
   }
-  else if(threePinState == LOW) {
+  else if (threePinState == LOW)
+  {
     keypadNumber(3);
   }
 
-  else if(fourPinState == LOW) {
+  else if (fourPinState == LOW)
+  {
     keypadNumber(4);
   }
-  else if(fivePinState == LOW) {
+  else if (fivePinState == LOW)
+  {
     keypadNumber(5);
   }
 
-  else if(sixPinState == LOW) {
+  else if (sixPinState == LOW)
+  {
     keypadNumber(6);
   }
-  else if(sevenPinState == LOW) {
+  else if (sevenPinState == LOW)
+  {
     keypadNumber(7);
   }
 
-  else if(eightPinState == LOW) {
+  else if (eightPinState == LOW)
+  {
     keypadNumber(8);
   }
-  else if(ninePinState == LOW) {
+  else if (ninePinState == LOW)
+  {
     keypadNumber(9);
   }
- 
+}
+
+void motorRun()
+{
+  Serial.println("motor run");
+  if (isOpen == 1)
+  {
+    Serial.println("close");
+    motorClose();
+  }
+  else
+  {
+    Serial.println("open");
+    motorOpen();
+  }
+}
+
+void motorOpen()
+{
+  digitalWrite(P_CLOSE, LOW);
+  digitalWrite(P_OPEN, HIGH);
+  uint16_t x = analogRead(P_POT);
+  while (x < 4000)
+  {
+    x = analogRead(P_POT);
+    Serial.println(x);
+    vTaskDelay(50);
+  }
+  digitalWrite(P_OPEN, LOW);
+  isOpen = 1;
+  Serial.println("Open value:");
+  Serial.println(isOpen);
+}
+
+void motorClose()
+{
+  digitalWrite(P_OPEN, LOW);
+  digitalWrite(P_CLOSE, HIGH);
+  uint16_t x = analogRead(P_POT);
+  while (x > 100)
+  {
+    x = analogRead(P_POT);
+    Serial.println(x);
+    vTaskDelay(50);
+  }
+  digitalWrite(P_CLOSE, LOW);
+  isOpen = 0;
+  Serial.println("Open value:");
+  Serial.println(isOpen);
 }
