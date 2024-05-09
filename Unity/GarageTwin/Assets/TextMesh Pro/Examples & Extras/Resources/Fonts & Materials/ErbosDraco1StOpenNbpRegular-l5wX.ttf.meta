@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: ea8b41e6a4a054238ba5e1c2baa8da2c
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Erbos Draco 1st Open NBP
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: e5d205974348e4ea4b0695b402c9abb4, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
