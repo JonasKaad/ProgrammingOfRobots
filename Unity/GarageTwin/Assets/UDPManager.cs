@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,8 +26,14 @@ public class UDPManager : MonoBehaviour
     // Move manager
     private MoveManager _moveManager;
 
+    // Keypad handler
+    private KeypadManager _keypadManager;
+    
     // ESP32 Sensor
     public float potentiometerValue { get; private set; } = 0;
+    public string keypadCode { get; private set; } = "";
+    public string KeypadInteraction { get; private set; } = "";
+    private string prevKeypadCode = "";
     private float prevPotVal = -1;
 
     void Awake()
@@ -45,6 +53,7 @@ public class UDPManager : MonoBehaviour
     void Start()
     {
         _moveManager = FindObjectOfType<MoveManager>();
+        _keypadManager = FindObjectOfType<KeypadManager>();
         
         //Get IP Address
         DisplayIPAddress();
@@ -78,6 +87,28 @@ public class UDPManager : MonoBehaviour
             _moveManager.MoveObjectsByPercentage(potentiometerValue);
             prevPotVal = potentiometerValue;
         }
+
+        
+        
+        if (prevKeypadCode != keypadCode)
+        {
+                _keypadManager.EnterCode(""+keypadCode.LastOrDefault());
+                prevKeypadCode = keypadCode;
+            
+        }
+        
+        switch (KeypadInteraction)
+        {
+            case "-1": 
+                _keypadManager.Enter();
+                KeypadInteraction = "";
+                StartCoroutine(WaitSeconds());
+                keypadCode = "";
+                break;
+            case "-2": _keypadManager.Clear();
+                KeypadInteraction = "";
+                break;
+        }
     }
 
     private void ReceiveCallback(IAsyncResult result)
@@ -104,6 +135,30 @@ public class UDPManager : MonoBehaviour
                 if (float.TryParse(parts[1], out value))
                 {
                     potentiometerValue = value;
+                }
+                else
+                {
+                    Debug.LogError("Failed to parse the value as an integer.");
+                }
+            }
+            else if (parts[0] == "key")
+            {
+                int value;
+                if (int.TryParse(parts[1], out value))
+                {
+                    if (value == -1)
+                    {
+                        KeypadInteraction = "" + value;
+                    }
+                    else if (value == -2)
+                    {
+                        KeypadInteraction = "" + value;
+                        keypadCode = "";
+                    }
+                    else
+                    {
+                        keypadCode += value;
+                    }
                 }
                 else
                 {
@@ -163,6 +218,10 @@ public class UDPManager : MonoBehaviour
         {
             Debug.LogError("Error fetching local IP address: " + ex.Message);
         }
+    }
+    private IEnumerator WaitSeconds()
+    {
+        yield return new WaitForSecondsRealtime(2);
     }
     
     private void OnDestroy()
