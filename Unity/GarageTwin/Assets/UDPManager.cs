@@ -95,17 +95,24 @@ public class UDPManager : MonoBehaviour
         // Splitting the receivedData string by the '|' character
         string[] parts = receivedData.Split('|');
 
-        if (parts.Length == 2) 
+        if (parts.Length == 2)
         {
-            string sensorID = parts[0];
-            float value;
-            if (float.TryParse(parts[1], out value))
+            if (parts[0] == "pot")
             {
-                potentiometerValue = value;
+                string sensorID = parts[0];
+                float value;
+                if (float.TryParse(parts[1], out value))
+                {
+                    potentiometerValue = value;
+                }
+                else
+                {
+                    Debug.LogError("Failed to parse the value as an integer.");
+                }
             }
             else
             {
-                Debug.LogError("Failed to parse the value as an integer.");
+                Debug.LogError("non-supported command type");
             }
         }
         else
