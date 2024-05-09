@@ -23,8 +23,8 @@ const int P_POT = 34;
 const int DOOR_OPEN = 0;
 const int DOOR_CLOSE = 4;
 
-const int OPEN_LIMIT = 4000;
-const int CLOSE_LIMIT = 100;
+const int OPEN_LIMIT = 3500;
+const int CLOSE_LIMIT = 500;
 
 const int DOOR_LIMIT_BUFFER = 500;
 
