@@ -138,6 +138,7 @@ void loop()
   {
     handleNumberInputs();
   }
+  receiveUDPMessage();
 }
 
 void handleEnter()
