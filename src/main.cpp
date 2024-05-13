@@ -24,11 +24,12 @@ const int DOOR_OPEN = 12;
 const int DOOR_CLOSE = 27;
 
 const int OPEN_LIMIT = 4095;
-const int CLOSE_LIMIT = 100;
+const int CLOSE_LIMIT = 500;
 
-const int DOOR_LIMIT_BUFFER = 500;
+const int DOOR_LIMIT_BUFFER = 100;
 
 int isOpen = 1;
+int taskRunning = 0;
 
 constexpr byte ZERO_PIN = 16;
 constexpr byte ONE_PIN = 17;
@@ -56,6 +57,8 @@ bool ninePinState;
 bool resetPinState;
 bool enterPinState;
 
+TaskHandle_t motor_handler;
+
 int lcdColumns = 16;
 int lcdRows = 2;
 
@@ -68,7 +71,7 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 void sendUdpData(String Data);
 void sendMotorData(uint16_t motorVal);
 void sendKeyData(int key);
-void motorToggle();
+void motorToggle(void *pvParameters);
 void handleNumberInputs();
 void setDoorState();
 void keypadNumber(int key);
@@ -140,7 +143,11 @@ void handleEnter()
   {
     lcd.clear();
     lcd.print("Correct");
-    motorToggle();
+    if (taskRunning == 1)
+    {
+      vTaskDelete(motor_handler);
+    }
+    xTaskCreate(motorToggle, "Toggle1", 4000, NULL, 1, &motor_handler);
     delay(3000);
   }
   else
@@ -251,8 +258,9 @@ void sendUdpData(String Data)
   Udp.endPacket();
 }
 
-void motorToggle()
+void motorToggle(void *pvParameters)
 {
+  taskRunning = 1;
   int target;
   int to_run;
   int not_run;
@@ -284,6 +292,9 @@ void motorToggle()
   digitalWrite(to_run, LOW);
 
   setDoorState();
+
+  taskRunning = 0;
+  vTaskDelete(motor_handler);
 }
 
 void setDoorState()
