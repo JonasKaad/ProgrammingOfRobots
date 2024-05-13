@@ -11,8 +11,9 @@ using namespace std;
 const char SSID_NAME[] = "HotspotName";
 const char SSID_PASSWORD[] = "mobilesoftware6";
 WiFiUDP Udp;
+char UDPPacketBuffer[255];
 
-IPAddress RECEIVER_IP(192, 168, 125, 216); // 192.168.125.216
+IPAddress RECEIVER_IP(192, 168, 125, 60); // 192.168.125.216
 const int RECEIVER_PORT = 50195;
 const int LOCAL_PORT = 3002;
 
@@ -72,6 +73,10 @@ void motorOpen();
 void motorClose();
 void motorRun();
 void readKeyNumbers();
+void receiveUDPMessage();
+void keypadNumber(int key);
+
+
 
 void setup()
 {
@@ -113,6 +118,14 @@ void setup()
   {
     isOpen = 0;
   }
+  //keypadNumber(1);
+}
+
+void handleUDPKeypadNumber(int key)
+{
+  inputString += key;
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
 }
 
 void keypadNumber(int key)
@@ -140,36 +153,47 @@ void loop()
 
   if (enterPinState == LOW)
   {
-    if (inputString == password)
-    {
-      lcd.clear();
-      lcd.print("Correct");
-      motorRun();
-      delay(3000);
-    }
-    else
-    {
-      lcd.clear();
-      lcd.print("Wrong");
-      delay(3000);
-    }
-    inputString = "";
-    lcd.clear();
-    lcd.print(inputString);
-    delay(KEYPAD_DELAY_TIME);
+    handleEnter();
   }
 
   else if (resetPinState == LOW)
   {
-    inputString = "";
-    lcd.clear();
-    lcd.print(inputString);
-    delay(KEYPAD_DELAY_TIME);
-  }
+    handleClear();
+  }  
   else
   {
     readKeyNumbers();
   }
+  receiveUDPMessage();
+}
+
+void handleClear()
+{
+    inputString = "";
+    lcd.clear();
+    lcd.print(inputString);
+    delay(KEYPAD_DELAY_TIME);
+}
+
+void handleEnter()
+{
+  if (inputString == password)
+  {
+    lcd.clear();
+    lcd.print("Correct");
+    motorRun();
+    delay(3000);
+  }
+  else
+  {
+    lcd.clear();
+    lcd.print("Wrong");
+    delay(3000);
+  }
+  inputString = "";
+  lcd.clear();
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
 }
 
 void readKeyNumbers()
@@ -287,4 +311,52 @@ void sendUdpData(String Data)
   Udp.endPacket();
   Serial.print("Sending Data: ");
   Serial.println(Data);
+}
+
+
+
+
+
+//Receive UDP DataString from Unity
+void receiveUDPMessage() {
+  if (Udp.parsePacket()) {
+    int length = Udp.read(UDPPacketBuffer, 255);
+    if (length > 0) {
+      UDPPacketBuffer[length] = 0;
+      Serial.print("Received UDP message: ");
+      Serial.println(UDPPacketBuffer);
+    }
+
+    // Parse the message 
+    int value;
+ 
+    if (UDPPacketBuffer != NULL) {
+      Serial.println("inside parsing message");
+      value = atoi(UDPPacketBuffer); // Convert string to integer
+      Serial.println("value is: " + value);
+
+      if(value<0){
+        switch (value)
+        {
+        case -1:
+          Serial.println("Entering: " + value);
+          handleEnter();
+          break;
+        case -2:
+          Serial.println("Clearing: " + value);
+          handleClear();
+          break;
+        default:
+          Serial.println("Defaulting: " + value);
+          handleClear();
+          break;
+        }
+      }
+      else {
+        handleUDPKeypadNumber(value);
+        Serial.println("Received number: " + value);
+      }
+      //Serial.println("Received: " + value);
+    }
+  }
 }
