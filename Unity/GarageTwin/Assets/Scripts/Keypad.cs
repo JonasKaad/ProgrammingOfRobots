@@ -36,11 +36,12 @@ public class Keypad : MonoBehaviour
     private InputAction enterAction;
     private InputAction clearAction;
     private MoveManager _moveManager;
+    private UDPManager _udpManager;
     private bool closed = true;
 
 
 
-    private string password = "334509";
+    private string password = "1111";
     // Start is called before the first frame update
     void Start()
     {
@@ -58,6 +59,7 @@ public class Keypad : MonoBehaviour
         clearAction = InputSystem.ListEnabledActions().Find(action => action.name == "Clear");
         inputPrompt.text = "ENTER PASSWORD:";
         _moveManager = FindObjectOfType<MoveManager>();
+        _udpManager = FindObjectOfType<UDPManager>();
 
     }
 
@@ -116,70 +118,90 @@ public class Keypad : MonoBehaviour
 
         if(enterAction.WasPressedThisFrame())
         {
-            buttonEnter();
+            keypadEnter();
         }
 
         if(clearAction.WasPressedThisFrame())
         {
-            buttonClear();
+            keypadClear();
         }
     }
     public void buttonOne(){
+        SendMessage("1");
         tMP_InputField.text += "1";
     }
     public void buttonTwo(){
+        SendMessage("2");
         tMP_InputField.text += "2";
     }
     public void buttonThree(){
+        SendMessage("3");
         tMP_InputField.text += "3";
     }
     public void buttonFour(){
+        SendMessage("4");
         tMP_InputField.text += "4";
     }
     public void buttonFive(){
+        SendMessage("5");
         tMP_InputField.text += "5";
     }
     public void buttonSix(){
+        SendMessage("6");
         tMP_InputField.text += "6";
     }
     public void buttonSeven(){
+        SendMessage("7");
         tMP_InputField.text += "7";
     }
     public void buttonEight(){
+        SendMessage("8");
         tMP_InputField.text += "8";
     }
     public void buttonNine(){
+        SendMessage("9");
         tMP_InputField.text += "9";
     }
     public void buttonZero(){
+        SendMessage("0");
         tMP_InputField.text += "0";
     }
 
+    public void keypadClear() {
+        SendMessage("-2");
+        tMP_InputField.text = null;
+    }
     public void buttonClear() {
         tMP_InputField.text = null;
     }
 
-    public void buttonEnter()
+    public void keypadEnter()
     {
+        SendMessage("-1");
         if (tMP_InputField.text == password)
         {
-            switch (closed)
-            {
-                case true:
-                    _moveManager.MoveObjectsByPercentage(1f);
-                    closed = !closed;
-                    break;
-                case false:
-                    _moveManager.MoveObjectsByPercentage(0f);
-                    closed = !closed;
-                    break;
-            }
             StartCoroutine(PincodeInput("Correct"));
         }
         else
         {
             StartCoroutine(PincodeInput("Wrong"));
         }
+    }
+    public void buttonEnter()
+    {
+        if (tMP_InputField.text == password)
+        {
+            StartCoroutine(PincodeInput("Correct"));
+        }
+        else
+        {
+            StartCoroutine(PincodeInput("Wrong"));
+        }
+    }
+
+    public new void SendMessage(string message)
+    {
+        _udpManager.SendUDPMessage(message, _udpManager.GarageIPAddress, _udpManager.GaragePort);
     }
     
     public void EnterKey(string key)
@@ -191,7 +213,7 @@ public class Keypad : MonoBehaviour
     {
         inputPrompt.text = input;        
         tMP_InputField.text = null;
-        yield return new WaitForSeconds (2);
+        yield return new WaitForSeconds (3);
         inputPrompt.text = "ENTER PASSWORD:";
     }
 }

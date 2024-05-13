@@ -17,9 +17,13 @@ public class UDPManager : MonoBehaviour
 
     // UDP Settings
     [Header("UDP Settings")]
-    [SerializeField] private int UDPPort = 50194;
-    [SerializeField] private bool displayUDPMessages = false;
-    [SerializeField] private string garageIPAddress = "192.168.219.48";
+    [SerializeField] private int UDPPort = 50195;
+    [SerializeField] private bool displayUDPMessages = true;
+    [SerializeField] private string garageIPAddress = "192.168.125.102";
+    [SerializeField] private int garagePort = 3002;
+
+    public string GarageIPAddress => garageIPAddress;
+    public int GaragePort => garagePort;
     private UdpClient udpClient;
     private IPEndPoint endPoint;
     
@@ -178,28 +182,27 @@ public class UDPManager : MonoBehaviour
         udpClient.BeginReceive(ReceiveCallback, null);
     }
 
-    // Function to send UDP message
-    // public void SendUDPMessage(string message, string ipAddress, int port)
-    // {
-    //     UdpClient client = new UdpClient();
-    //     try
-    //     {
-    //         // Convert the message string to bytes
-    //         byte[] data = Encoding.UTF8.GetBytes(message);
-    //
-    //         // Send the UDP message
-    //         client.Send(data, data.Length, ipAddress, port);
-    //         Debug.Log("UDP message sent: " + message);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Debug.LogError("Error sending UDP message: " + e.Message);
-    //     }
-    //     finally
-    //     {
-    //         client.Close();
-    //     }
-    // }
+    public void SendUDPMessage(string message, string ipAddress, int port)
+    {
+        UdpClient client = new UdpClient();
+        try
+        {
+            // Convert the message string to bytes
+            byte[] data = Encoding.UTF8.GetBytes(message);
+
+            // Send the UDP message
+            client.Send(data, data.Length, ipAddress, port);
+            Debug.Log("UDP message sent: " + message);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error sending UDP message: " + e.Message);
+        }
+        finally
+        {
+            client.Close();
+        }
+    }
 
     void DisplayIPAddress()
     {
