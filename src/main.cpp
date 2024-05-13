@@ -262,12 +262,6 @@ void sendMotorData(uint16_t motorVal)
   sendUdpData(potUDPString);
 }
 
-void sendUdpData(String Data)
-{
-  Udp.beginPacket(RECEIVER_IP, RECEIVER_PORT);
-  Udp.print(Data);
-  Udp.endPacket();
-}
 
 void motorToggle(void *pvParameters)
 {
@@ -350,7 +344,7 @@ void receiveUDPMessage() {
           handleReset();
           break;
         default:
-          handleClear();
+          handleReset();
           break;
         }
       }
