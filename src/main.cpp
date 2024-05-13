@@ -21,15 +21,16 @@ char potUDPString[10] = {};
 char keyUDPString[8] = {};
 
 const int P_POT = 34;
-const int DOOR_OPEN = 0;
-const int DOOR_CLOSE = 4;
+const int DOOR_OPEN = 12;
+const int DOOR_CLOSE = 27;
 
-const int OPEN_LIMIT = 3500;
+const int OPEN_LIMIT = 4095;
 const int CLOSE_LIMIT = 500;
 
-const int DOOR_LIMIT_BUFFER = 500;
+const int DOOR_LIMIT_BUFFER = 100;
 
 int isOpen = 1;
+int taskRunning = 0;
 
 constexpr byte ZERO_PIN = 16;
 constexpr byte ONE_PIN = 17;
@@ -57,6 +58,8 @@ bool ninePinState;
 bool resetPinState;
 bool enterPinState;
 
+TaskHandle_t motor_handler;
+
 int lcdColumns = 16;
 int lcdRows = 2;
 
@@ -69,12 +72,14 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 void sendUdpData(String Data);
 void sendMotorData(uint16_t motorVal);
 void sendKeyData(int key);
-void motorOpen();
-void motorClose();
-void motorRun();
-void readKeyNumbers();
 void receiveUDPMessage();
+void motorToggle(void *pvParameters);
+void handleNumberInputs();
+void setDoorState();
 void keypadNumber(int key);
+void sendKeyData(int key);
+void handleEnter();
+void handleReset();
 
 
 
@@ -100,7 +105,6 @@ void setup()
   lcd.init();
   lcd.backlight();
 
-  // Wifi Setup
   WiFi.begin(SSID_NAME, SSID_PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -109,37 +113,7 @@ void setup()
   }
   Udp.begin(LOCAL_PORT);
 
-  uint16_t x = analogRead(P_POT);
-  if (x > OPEN_LIMIT - DOOR_LIMIT_BUFFER)
-  {
-    isOpen = 1;
-  }
-  else if (x < CLOSE_LIMIT + DOOR_LIMIT_BUFFER)
-  {
-    isOpen = 0;
-  }
-  //keypadNumber(1);
-}
-
-void handleUDPKeypadNumber(int key)
-{
-  inputString += key;
-  lcd.print(inputString);
-  delay(KEYPAD_DELAY_TIME);
-}
-
-void keypadNumber(int key)
-{
-  inputString += key;
-  sendKeyData(key);
-  lcd.print(inputString);
-  delay(KEYPAD_DELAY_TIME);
-}
-
-void sendKeyData(int key)
-{
-  sprintf(keyUDPString, "key|%u", key);
-  sendUdpData(keyUDPString);
+  setDoorState();
 }
 
 void loop()
@@ -158,30 +132,26 @@ void loop()
 
   else if (resetPinState == LOW)
   {
-    handleClear();
-  }  
+    handleReset();
+  }
   else
   {
-    readKeyNumbers();
+    handleNumberInputs();
   }
-  receiveUDPMessage();
-}
-
-void handleClear()
-{
-    inputString = "";
-    lcd.clear();
-    lcd.print(inputString);
-    delay(KEYPAD_DELAY_TIME);
 }
 
 void handleEnter()
 {
+  sendKeyData(-1);
   if (inputString == password)
   {
     lcd.clear();
     lcd.print("Correct");
-    motorRun();
+    if (taskRunning == 1)
+    {
+      vTaskDelete(motor_handler);
+    }
+    xTaskCreate(motorToggle, "Toggle1", 4000, NULL, 1, &motor_handler);
     delay(3000);
   }
   else
@@ -196,7 +166,23 @@ void handleEnter()
   delay(KEYPAD_DELAY_TIME);
 }
 
-void readKeyNumbers()
+void handleReset()
+{
+  sendKeyData(-2);
+  inputString = "";
+  lcd.clear();
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
+}
+
+void handleUDPKeypadNumber(int key)
+{
+  inputString += key;
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
+}
+
+void handleNumberInputs()
 {
   zeroPinState = digitalRead(ZERO_PIN);
   onePinState = digitalRead(ONE_PIN);
@@ -255,46 +241,18 @@ void readKeyNumbers()
   }
 }
 
-void motorRun()
+void keypadNumber(int key)
 {
-  if (isOpen == 1)
-  {
-    motorClose();
-  }
-  else
-  {
-    motorOpen();
-  }
+  inputString += key;
+  sendKeyData(key);
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
 }
 
-void motorOpen()
+void sendKeyData(int key)
 {
-  digitalWrite(DOOR_CLOSE, LOW);
-  digitalWrite(DOOR_OPEN, HIGH);
-  uint16_t x = analogRead(P_POT);
-  while (x < OPEN_LIMIT)
-  {
-    x = analogRead(P_POT);
-    sendMotorData(x);
-    vTaskDelay(50);
-  }
-  digitalWrite(DOOR_OPEN, LOW);
-  isOpen = 1;
-}
-
-void motorClose()
-{
-  digitalWrite(DOOR_OPEN, LOW);
-  digitalWrite(DOOR_CLOSE, HIGH);
-  uint16_t x = analogRead(P_POT);
-  while (x > CLOSE_LIMIT)
-  {
-    x = analogRead(P_POT);
-    sendMotorData(x);
-    vTaskDelay(50);
-  }
-  digitalWrite(DOOR_CLOSE, LOW);
-  isOpen = 0;
+  sprintf(keyUDPString, "key|%d", key);
+  sendUdpData(keyUDPString);
 }
 
 void sendMotorData(uint16_t motorVal)
@@ -309,54 +267,96 @@ void sendUdpData(String Data)
   Udp.beginPacket(RECEIVER_IP, RECEIVER_PORT);
   Udp.print(Data);
   Udp.endPacket();
-  Serial.print("Sending Data: ");
-  Serial.println(Data);
 }
 
+void motorToggle(void *pvParameters)
+{
+  taskRunning = 1;
+  int target;
+  int to_run;
+  int not_run;
 
+  if (isOpen == 1)
+  {
+    target = CLOSE_LIMIT;
+    to_run = DOOR_OPEN;
+    not_run = DOOR_CLOSE;
+  }
+  else
+  {
+    target = OPEN_LIMIT;
+    to_run = DOOR_CLOSE;
+    not_run = DOOR_OPEN;
+  }
 
+  digitalWrite(not_run, LOW);
+  digitalWrite(to_run, HIGH);
 
+  uint16_t x = analogRead(P_POT);
 
+  while (abs(target - x) > DOOR_LIMIT_BUFFER)
+  {
+    x = analogRead(P_POT);
+    sendMotorData(x);
+    vTaskDelay(50);
+  }
+  digitalWrite(to_run, LOW);
+
+  setDoorState();
+
+  taskRunning = 0;
+  vTaskDelete(motor_handler);
+}
+
+void setDoorState()
+{
+  uint16_t x = analogRead(P_POT);
+  if (x > OPEN_LIMIT - DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 1;
+  }
+  else if (x < CLOSE_LIMIT + DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 0;
+  }
+}
+void sendUdpData(String Data)
+{
+  Udp.beginPacket(RECEIVER_IP, RECEIVER_PORT);
+  Udp.print(Data);
+  Udp.endPacket();
+}
 //Receive UDP DataString from Unity
 void receiveUDPMessage() {
   if (Udp.parsePacket()) {
     int length = Udp.read(UDPPacketBuffer, 255);
     if (length > 0) {
       UDPPacketBuffer[length] = 0;
-      Serial.print("Received UDP message: ");
-      Serial.println(UDPPacketBuffer);
     }
 
     // Parse the message 
     int value;
  
     if (UDPPacketBuffer != NULL) {
-      Serial.println("inside parsing message");
       value = atoi(UDPPacketBuffer); // Convert string to integer
-      Serial.println("value is: " + value);
 
       if(value<0){
         switch (value)
         {
         case -1:
-          Serial.println("Entering: " + value);
           handleEnter();
           break;
         case -2:
-          Serial.println("Clearing: " + value);
-          handleClear();
+          handleReset();
           break;
         default:
-          Serial.println("Defaulting: " + value);
           handleClear();
           break;
         }
       }
       else {
         handleUDPKeypadNumber(value);
-        Serial.println("Received number: " + value);
       }
-      //Serial.println("Received: " + value);
     }
   }
 }
