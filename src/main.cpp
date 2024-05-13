@@ -3,20 +3,33 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <WiFi.h>
+#include <WiFiUdp.h>
 using namespace std;
 
-// New stuff
+// Digital Twin
+const char SSID_NAME[] = "HotspotName";
+const char SSID_PASSWORD[] = "mobilesoftware6";
+WiFiUDP Udp;
+
+IPAddress RECEIVER_IP(192, 168, 125, 216); // 192.168.125.216
+const int RECEIVER_PORT = 50195;
+const int LOCAL_PORT = 3002;
+
+char potUDPString[10] = {};
+char keyUDPString[8] = {};
+
 const int P_POT = 34;
-const int P_OPEN = 0;
-const int P_CLOSE = 4;
+const int DOOR_OPEN = 0;
+const int DOOR_CLOSE = 4;
+
+const int OPEN_LIMIT = 3500;
+const int CLOSE_LIMIT = 500;
+
+const int DOOR_LIMIT_BUFFER = 500;
 
 int isOpen = 1;
 
-void motorOpen();
-void motorClose();
-void motorRun();
-
-// sets input pins
 constexpr byte ZERO_PIN = 16;
 constexpr byte ONE_PIN = 17;
 constexpr byte TWO_PIN = 5;
@@ -30,7 +43,6 @@ constexpr byte NINE_PIN = 15;
 constexpr byte RESET_PIN = 13;
 constexpr byte ENTER_PIN = 26;
 
-// pin state
 bool zeroPinState;
 bool onePinState;
 bool twoPinState;
@@ -44,20 +56,27 @@ bool ninePinState;
 bool resetPinState;
 bool enterPinState;
 
-// set the LCD number of columns and rows
 int lcdColumns = 16;
 int lcdRows = 2;
 
-// set LCD address, number of columns and rows
-// if you don't know your display address, run an I2C scanner sketch
+String inputString = String("");
+const String password = String("1111");
+
+const uint32_t KEYPAD_DELAY_TIME = 225;
+
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
+void sendUdpData(String Data);
+void sendMotorData(uint16_t motorVal);
+void sendKeyData(int key);
+void motorOpen();
+void motorClose();
+void motorRun();
+void readKeyNumbers();
 
 void setup()
 {
-  // enable Serial
   Serial.begin(9600);
 
-  // set pinMode
   pinMode(ZERO_PIN, INPUT_PULLUP);
   pinMode(ONE_PIN, INPUT_PULLUP);
   pinMode(TWO_PIN, INPUT_PULLUP);
@@ -70,29 +89,44 @@ void setup()
   pinMode(NINE_PIN, INPUT_PULLUP);
   pinMode(RESET_PIN, INPUT_PULLUP);
   pinMode(ENTER_PIN, INPUT_PULLUP);
-  pinMode(P_OPEN, OUTPUT);
-  pinMode(P_CLOSE, OUTPUT);
+  pinMode(DOOR_OPEN, OUTPUT);
+  pinMode(DOOR_CLOSE, OUTPUT);
 
-  // initialize LCD
   lcd.init();
-  // turn on LCD backlight
   lcd.backlight();
+
+  // Wifi Setup
+  WiFi.begin(SSID_NAME, SSID_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.println("Trying WiFi");
+    delay(1000);
+  }
+  Udp.begin(LOCAL_PORT);
+
+  uint16_t x = analogRead(P_POT);
+  if (x > OPEN_LIMIT - DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 1;
+  }
+  else if (x < CLOSE_LIMIT + DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 0;
+  }
 }
-
-String inputString = String("");
-String password = String("1111");
-
-uint32_t KEYPAD_DELAY_TIME = 225;
 
 void keypadNumber(int key)
 {
-  Serial.print(key);
-  Serial.println(" SWITCH IS DOWN");
   inputString += key;
-  // Serial.println(inputString.length());
-  // lcd.clear();
+  sendKeyData(key);
   lcd.print(inputString);
   delay(KEYPAD_DELAY_TIME);
+}
+
+void sendKeyData(int key)
+{
+  sprintf(keyUDPString, "key|%u", key);
+  sendUdpData(keyUDPString);
 }
 
 void loop()
@@ -101,23 +135,11 @@ void loop()
   lcd.print("Enter Password: ");
   lcd.setCursor(0, 1);
 
-  // read the switch
-  zeroPinState = digitalRead(ZERO_PIN);
-  onePinState = digitalRead(ONE_PIN);
-  twoPinState = digitalRead(TWO_PIN);
-  threePinState = digitalRead(THREE_PIN);
-  fourPinState = digitalRead(FOUR_PIN);
-  fivePinState = digitalRead(FIVE_PIN);
-  sixPinState = digitalRead(SIX_PIN);
-  sevenPinState = digitalRead(SEVEN_PIN);
-  eightPinState = digitalRead(EIGHT_PIN);
-  ninePinState = digitalRead(NINE_PIN);
   resetPinState = digitalRead(RESET_PIN);
   enterPinState = digitalRead(ENTER_PIN);
 
   if (enterPinState == LOW)
   {
-    Serial.println("Password");
     if (inputString == password)
     {
       lcd.clear();
@@ -139,16 +161,31 @@ void loop()
 
   else if (resetPinState == LOW)
   {
-    Serial.println("reset!");
     inputString = "";
-    Serial.println(inputString.length());
     lcd.clear();
     lcd.print(inputString);
     delay(KEYPAD_DELAY_TIME);
   }
+  else
+  {
+    readKeyNumbers();
+  }
+}
 
-  // print if switch is down
-  else if (zeroPinState == LOW)
+void readKeyNumbers()
+{
+  zeroPinState = digitalRead(ZERO_PIN);
+  onePinState = digitalRead(ONE_PIN);
+  twoPinState = digitalRead(TWO_PIN);
+  threePinState = digitalRead(THREE_PIN);
+  fourPinState = digitalRead(FOUR_PIN);
+  fivePinState = digitalRead(FIVE_PIN);
+  sixPinState = digitalRead(SIX_PIN);
+  sevenPinState = digitalRead(SEVEN_PIN);
+  eightPinState = digitalRead(EIGHT_PIN);
+  ninePinState = digitalRead(NINE_PIN);
+
+  if (zeroPinState == LOW)
   {
     keypadNumber(0);
   }
@@ -196,49 +233,58 @@ void loop()
 
 void motorRun()
 {
-  Serial.println("motor run");
   if (isOpen == 1)
   {
-    Serial.println("close");
     motorClose();
   }
   else
   {
-    Serial.println("open");
     motorOpen();
   }
 }
 
 void motorOpen()
 {
-  digitalWrite(P_CLOSE, LOW);
-  digitalWrite(P_OPEN, HIGH);
+  digitalWrite(DOOR_CLOSE, LOW);
+  digitalWrite(DOOR_OPEN, HIGH);
   uint16_t x = analogRead(P_POT);
-  while (x < 4000)
+  while (x < OPEN_LIMIT)
   {
     x = analogRead(P_POT);
-    Serial.println(x);
+    sendMotorData(x);
     vTaskDelay(50);
   }
-  digitalWrite(P_OPEN, LOW);
+  digitalWrite(DOOR_OPEN, LOW);
   isOpen = 1;
-  Serial.println("Open value:");
-  Serial.println(isOpen);
 }
 
 void motorClose()
 {
-  digitalWrite(P_OPEN, LOW);
-  digitalWrite(P_CLOSE, HIGH);
+  digitalWrite(DOOR_OPEN, LOW);
+  digitalWrite(DOOR_CLOSE, HIGH);
   uint16_t x = analogRead(P_POT);
-  while (x > 100)
+  while (x > CLOSE_LIMIT)
   {
     x = analogRead(P_POT);
-    Serial.println(x);
+    sendMotorData(x);
     vTaskDelay(50);
   }
-  digitalWrite(P_CLOSE, LOW);
+  digitalWrite(DOOR_CLOSE, LOW);
   isOpen = 0;
-  Serial.println("Open value:");
-  Serial.println(isOpen);
+}
+
+void sendMotorData(uint16_t motorVal)
+{
+  float potPercentage = ((float)motorVal) / 4095;
+  sprintf(potUDPString, "pot|%.2f", potPercentage);
+  sendUdpData(potUDPString);
+}
+
+void sendUdpData(String Data)
+{
+  Udp.beginPacket(RECEIVER_IP, RECEIVER_PORT);
+  Udp.print(Data);
+  Udp.endPacket();
+  Serial.print("Sending Data: ");
+  Serial.println(Data);
 }
