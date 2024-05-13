@@ -70,20 +70,6 @@ public class UDPManager : MonoBehaviour
             Debug.Log("UDP - Start receiving. On port: " + UDPPort);
     }
 
-    // Update is called once per frame
-    // void Update()
-    // {
-    //     if (Input.GetKeyDown(KeyCode.UpArrow))
-    //     {
-    //         SendUDPMessage("LED|1", garageIPAddress, 3002);
-    //     }
-    //
-    //     if (Input.GetKeyDown(KeyCode.DownArrow))
-    //     {
-    //         SendUDPMessage("LED|0", garageIPAddress, 3002);
-    //     }
-    // }
-
     private void Update()
     {
         if (Math.Abs(prevPotVal - potentiometerValue) > 0.0001)

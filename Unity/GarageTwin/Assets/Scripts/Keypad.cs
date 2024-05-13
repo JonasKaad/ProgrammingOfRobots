@@ -35,7 +35,6 @@ public class Keypad : MonoBehaviour
     private InputAction nineAction;
     private InputAction enterAction;
     private InputAction clearAction;
-    private MoveManager _moveManager;
     private UDPManager _udpManager;
     private bool closed = true;
 
@@ -60,7 +59,6 @@ public class Keypad : MonoBehaviour
         inputPrompt.text = "ENTER PASSWORD:";
         tMP_InputField.characterLimit = 16;
         inputPrompt.characterLimit = 16;
-        _moveManager = FindObjectOfType<MoveManager>();
         _udpManager = FindObjectOfType<UDPManager>();
 
     }

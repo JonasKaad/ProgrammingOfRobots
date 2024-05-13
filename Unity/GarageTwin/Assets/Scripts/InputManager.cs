@@ -9,6 +9,7 @@ public class InputManager : MonoBehaviour
 {
     [SerializeField]
     private MoveScript[] movingScripts;
+    private GearRotation[] _gearScripts;
     private InputAction forwardAction;
     private InputAction backwardAction;
     private InputAction switchCamAction;
@@ -26,6 +27,7 @@ public class InputManager : MonoBehaviour
         backwardAction = InputSystem.ListEnabledActions().Find(action => action.name == "Backward");
         switchCamAction = InputSystem.ListEnabledActions().Find(action => action.name == "SwitchCam");
         percentAction = InputSystem.ListEnabledActions().Find(action => action.name == "percent");
+        _gearScripts = (GearRotation[])FindObjectsOfType(typeof(GearRotation));
     }
 
     // Update is called once per frame
@@ -37,6 +39,7 @@ public class InputManager : MonoBehaviour
             {
                 moveScript.MoveToNextPosition();
             }
+            MoveGears();
         }
 
         if (backwardAction.WasPressedThisFrame())
@@ -45,6 +48,7 @@ public class InputManager : MonoBehaviour
             {
                 moveScript.MoveToPrevPosition();
             }
+            MoveGears();
         }
         
         if (switchCamAction.WasPressedThisFrame())
@@ -61,6 +65,15 @@ public class InputManager : MonoBehaviour
             {
                 moveScript.MoveToPercentage(percentage);
             }
+            MoveGears();
+        }
+    }
+
+    void MoveGears()
+    {
+        foreach (var gearScript in _gearScripts)
+        {
+            StartCoroutine(gearScript.RotateGear());
         }
     }
 }
