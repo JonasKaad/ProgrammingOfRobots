@@ -153,17 +153,6 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "c9552e18-5058-4668-b935-bccffc861e0e",
-                    "path": "<Keyboard>/enter",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SwitchCam",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "9c6b3bab-3a48-4dc3-bdb1-a51b42c5a9dd",
                     "path": "<Keyboard>/space",
                     "interactions": "",
@@ -243,6 +232,17 @@
                     "name": "",
                     "id": "933255f9-beb4-4bff-b601-01b72284fe57",
                     "path": "<Keyboard>/delete",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "percent",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7ed60339-52eb-4f22-aaba-73924f62362d",
+                    "path": "<Keyboard>/p",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -461,8 +461,41 @@
                 },
                 {
                     "name": "",
+                    "id": "994f305e-8b48-4536-b870-d43029f47f51",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Enter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d9ae8f96-63f6-414a-a9c4-55c55abae814",
+                    "path": "<Keyboard>/numpadEnter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Enter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "d41956b5-c002-494a-bf26-0d313194602e",
                     "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Clear",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f388a97c-969d-40f3-b212-3fd50983295c",
+                    "path": "<Keyboard>/backspace",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
