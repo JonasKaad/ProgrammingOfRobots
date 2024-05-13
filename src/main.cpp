@@ -12,7 +12,7 @@ const char SSID_NAME[] = "HotspotName";
 const char SSID_PASSWORD[] = "mobilesoftware6";
 WiFiUDP Udp;
 
-IPAddress RECEIVER_IP(192, 168, 125, 216); // 192.168.125.216
+IPAddress RECEIVER_IP(192, 168, 125, 60); // 192.168.125.216
 const int RECEIVER_PORT = 50195;
 const int LOCAL_PORT = 3002;
 
@@ -20,11 +20,11 @@ char potUDPString[10] = {};
 char keyUDPString[8] = {};
 
 const int P_POT = 34;
-const int DOOR_OPEN = 0;
-const int DOOR_CLOSE = 4;
+const int DOOR_OPEN = 12;
+const int DOOR_CLOSE = 27;
 
-const int OPEN_LIMIT = 3500;
-const int CLOSE_LIMIT = 500;
+const int OPEN_LIMIT = 4095;
+const int CLOSE_LIMIT = 100;
 
 const int DOOR_LIMIT_BUFFER = 500;
 
@@ -68,10 +68,13 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 void sendUdpData(String Data);
 void sendMotorData(uint16_t motorVal);
 void sendKeyData(int key);
-void motorOpen();
-void motorClose();
-void motorRun();
-void readKeyNumbers();
+void motorToggle();
+void handleNumberInputs();
+void setDoorState();
+void keypadNumber(int key);
+void sendKeyData(int key);
+void handleEnter();
+void handleReset();
 
 void setup()
 {
@@ -95,7 +98,6 @@ void setup()
   lcd.init();
   lcd.backlight();
 
-  // Wifi Setup
   WiFi.begin(SSID_NAME, SSID_PASSWORD);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -104,29 +106,7 @@ void setup()
   }
   Udp.begin(LOCAL_PORT);
 
-  uint16_t x = analogRead(P_POT);
-  if (x > OPEN_LIMIT - DOOR_LIMIT_BUFFER)
-  {
-    isOpen = 1;
-  }
-  else if (x < CLOSE_LIMIT + DOOR_LIMIT_BUFFER)
-  {
-    isOpen = 0;
-  }
-}
-
-void keypadNumber(int key)
-{
-  inputString += key;
-  sendKeyData(key);
-  lcd.print(inputString);
-  delay(KEYPAD_DELAY_TIME);
-}
-
-void sendKeyData(int key)
-{
-  sprintf(keyUDPString, "key|%u", key);
-  sendUdpData(keyUDPString);
+  setDoorState();
 }
 
 void loop()
@@ -140,39 +120,51 @@ void loop()
 
   if (enterPinState == LOW)
   {
-    if (inputString == password)
-    {
-      lcd.clear();
-      lcd.print("Correct");
-      motorRun();
-      delay(3000);
-    }
-    else
-    {
-      lcd.clear();
-      lcd.print("Wrong");
-      delay(3000);
-    }
-    inputString = "";
-    lcd.clear();
-    lcd.print(inputString);
-    delay(KEYPAD_DELAY_TIME);
+    handleEnter();
   }
 
   else if (resetPinState == LOW)
   {
-    inputString = "";
-    lcd.clear();
-    lcd.print(inputString);
-    delay(KEYPAD_DELAY_TIME);
+    handleReset();
   }
   else
   {
-    readKeyNumbers();
+    handleNumberInputs();
   }
 }
 
-void readKeyNumbers()
+void handleEnter()
+{
+  sendKeyData(-1);
+  if (inputString == password)
+  {
+    lcd.clear();
+    lcd.print("Correct");
+    motorToggle();
+    delay(3000);
+  }
+  else
+  {
+    lcd.clear();
+    lcd.print("Wrong");
+    delay(3000);
+  }
+  inputString = "";
+  lcd.clear();
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
+}
+
+void handleReset()
+{
+  sendKeyData(-2);
+  inputString = "";
+  lcd.clear();
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
+}
+
+void handleNumberInputs()
 {
   zeroPinState = digitalRead(ZERO_PIN);
   onePinState = digitalRead(ONE_PIN);
@@ -231,46 +223,18 @@ void readKeyNumbers()
   }
 }
 
-void motorRun()
+void keypadNumber(int key)
 {
-  if (isOpen == 1)
-  {
-    motorClose();
-  }
-  else
-  {
-    motorOpen();
-  }
+  inputString += key;
+  sendKeyData(key);
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
 }
 
-void motorOpen()
+void sendKeyData(int key)
 {
-  digitalWrite(DOOR_CLOSE, LOW);
-  digitalWrite(DOOR_OPEN, HIGH);
-  uint16_t x = analogRead(P_POT);
-  while (x < OPEN_LIMIT)
-  {
-    x = analogRead(P_POT);
-    sendMotorData(x);
-    vTaskDelay(50);
-  }
-  digitalWrite(DOOR_OPEN, LOW);
-  isOpen = 1;
-}
-
-void motorClose()
-{
-  digitalWrite(DOOR_OPEN, LOW);
-  digitalWrite(DOOR_CLOSE, HIGH);
-  uint16_t x = analogRead(P_POT);
-  while (x > CLOSE_LIMIT)
-  {
-    x = analogRead(P_POT);
-    sendMotorData(x);
-    vTaskDelay(50);
-  }
-  digitalWrite(DOOR_CLOSE, LOW);
-  isOpen = 0;
+  sprintf(keyUDPString, "key|%d", key);
+  sendUdpData(keyUDPString);
 }
 
 void sendMotorData(uint16_t motorVal)
@@ -285,6 +249,52 @@ void sendUdpData(String Data)
   Udp.beginPacket(RECEIVER_IP, RECEIVER_PORT);
   Udp.print(Data);
   Udp.endPacket();
-  Serial.print("Sending Data: ");
-  Serial.println(Data);
+}
+
+void motorToggle()
+{
+  int target;
+  int to_run;
+  int not_run;
+
+  if (isOpen == 1)
+  {
+    target = CLOSE_LIMIT;
+    to_run = DOOR_OPEN;
+    not_run = DOOR_CLOSE;
+  }
+  else
+  {
+    target = OPEN_LIMIT;
+    to_run = DOOR_CLOSE;
+    not_run = DOOR_OPEN;
+  }
+
+  digitalWrite(not_run, LOW);
+  digitalWrite(to_run, HIGH);
+
+  uint16_t x = analogRead(P_POT);
+
+  while (abs(target - x) > DOOR_LIMIT_BUFFER)
+  {
+    x = analogRead(P_POT);
+    sendMotorData(x);
+    vTaskDelay(50);
+  }
+  digitalWrite(to_run, LOW);
+
+  setDoorState();
+}
+
+void setDoorState()
+{
+  uint16_t x = analogRead(P_POT);
+  if (x > OPEN_LIMIT - DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 1;
+  }
+  else if (x < CLOSE_LIMIT + DOOR_LIMIT_BUFFER)
+  {
+    isOpen = 0;
+  }
 }
