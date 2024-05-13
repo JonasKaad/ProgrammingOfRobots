@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -15,17 +17,27 @@ public class UDPManager : MonoBehaviour
 
     // UDP Settings
     [Header("UDP Settings")]
-    [SerializeField] private int UDPPort = 50194;
-    [SerializeField] private bool displayUDPMessages = false;
-    [SerializeField] private string garageIPAddress = "192.168.219.48";
+    [SerializeField] private int UDPPort = 50195;
+    [SerializeField] private bool displayUDPMessages = true;
+    [SerializeField] private string garageIPAddress = "192.168.125.102";
+    [SerializeField] private int garagePort = 3002;
+
+    public string GarageIPAddress => garageIPAddress;
+    public int GaragePort => garagePort;
     private UdpClient udpClient;
     private IPEndPoint endPoint;
     
     // Move manager
     private MoveManager _moveManager;
 
+    // Keypad handler
+    private KeypadManager _keypadManager;
+    
     // ESP32 Sensor
     public float potentiometerValue { get; private set; } = 0;
+    public string keypadCode { get; private set; } = "";
+    public string KeypadInteraction { get; private set; } = "";
+    private string prevKeypadCode = "";
     private float prevPotVal = -1;
 
     void Awake()
@@ -45,6 +57,7 @@ public class UDPManager : MonoBehaviour
     void Start()
     {
         _moveManager = FindObjectOfType<MoveManager>();
+        _keypadManager = FindObjectOfType<KeypadManager>();
         
         //Get IP Address
         DisplayIPAddress();
@@ -78,6 +91,28 @@ public class UDPManager : MonoBehaviour
             _moveManager.MoveObjectsByPercentage(potentiometerValue);
             prevPotVal = potentiometerValue;
         }
+
+        
+        
+        if (prevKeypadCode != keypadCode)
+        {
+                _keypadManager.EnterCode(""+keypadCode.LastOrDefault());
+                prevKeypadCode = keypadCode;
+            
+        }
+        
+        switch (KeypadInteraction)
+        {
+            case "-1": 
+                _keypadManager.Enter();
+                KeypadInteraction = "";
+                StartCoroutine(WaitSeconds());
+                keypadCode = "";
+                break;
+            case "-2": _keypadManager.Clear();
+                KeypadInteraction = "";
+                break;
+        }
     }
 
     private void ReceiveCallback(IAsyncResult result)
@@ -95,17 +130,48 @@ public class UDPManager : MonoBehaviour
         // Splitting the receivedData string by the '|' character
         string[] parts = receivedData.Split('|');
 
-        if (parts.Length == 2) 
+        if (parts.Length == 2)
         {
-            string sensorID = parts[0];
-            float value;
-            if (float.TryParse(parts[1], out value))
+            if (parts[0] == "pot")
             {
-                potentiometerValue = value;
+                string sensorID = parts[0];
+                float value;
+                if (float.TryParse(parts[1], out value))
+                {
+                    potentiometerValue = value;
+                }
+                else
+                {
+                    Debug.LogError("Failed to parse the value as an integer.");
+                }
+            }
+            else if (parts[0] == "key")
+            {
+                int value;
+                if (int.TryParse(parts[1], out value))
+                {
+                    if (value == -1)
+                    {
+                        KeypadInteraction = "" + value;
+                    }
+                    else if (value == -2)
+                    {
+                        KeypadInteraction = "" + value;
+                        keypadCode = "";
+                    }
+                    else
+                    {
+                        keypadCode += value;
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Failed to parse the value as an integer.");
+                }
             }
             else
             {
-                Debug.LogError("Failed to parse the value as an integer.");
+                Debug.LogError("non-supported command type");
             }
         }
         else
@@ -116,28 +182,27 @@ public class UDPManager : MonoBehaviour
         udpClient.BeginReceive(ReceiveCallback, null);
     }
 
-    // Function to send UDP message
-    // public void SendUDPMessage(string message, string ipAddress, int port)
-    // {
-    //     UdpClient client = new UdpClient();
-    //     try
-    //     {
-    //         // Convert the message string to bytes
-    //         byte[] data = Encoding.UTF8.GetBytes(message);
-    //
-    //         // Send the UDP message
-    //         client.Send(data, data.Length, ipAddress, port);
-    //         Debug.Log("UDP message sent: " + message);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Debug.LogError("Error sending UDP message: " + e.Message);
-    //     }
-    //     finally
-    //     {
-    //         client.Close();
-    //     }
-    // }
+    public void SendUDPMessage(string message, string ipAddress, int port)
+    {
+        UdpClient client = new UdpClient();
+        try
+        {
+            // Convert the message string to bytes
+            byte[] data = Encoding.UTF8.GetBytes(message);
+
+            // Send the UDP message
+            client.Send(data, data.Length, ipAddress, port);
+            Debug.Log("UDP message sent: " + message);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error sending UDP message: " + e.Message);
+        }
+        finally
+        {
+            client.Close();
+        }
+    }
 
     void DisplayIPAddress()
     {
@@ -156,6 +221,10 @@ public class UDPManager : MonoBehaviour
         {
             Debug.LogError("Error fetching local IP address: " + ex.Message);
         }
+    }
+    private IEnumerator WaitSeconds()
+    {
+        yield return new WaitForSecondsRealtime(2);
     }
     
     private void OnDestroy()
