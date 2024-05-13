@@ -58,6 +58,8 @@ public class Keypad : MonoBehaviour
         enterAction = InputSystem.ListEnabledActions().Find(action => action.name == "Enter");
         clearAction = InputSystem.ListEnabledActions().Find(action => action.name == "Clear");
         inputPrompt.text = "ENTER PASSWORD:";
+        tMP_InputField.characterLimit = 16;
+        inputPrompt.characterLimit = 16;
         _moveManager = FindObjectOfType<MoveManager>();
         _udpManager = FindObjectOfType<UDPManager>();
 
