@@ -80,6 +80,8 @@ void keypadNumber(int key);
 void sendKeyData(int key);
 void handleEnter();
 void handleReset();
+void handleResetHelper();
+void handleEnterHelper();
 
 
 
@@ -141,9 +143,16 @@ void loop()
   receiveUDPMessage();
 }
 
-void handleEnter()
+void handleResetHelper()
 {
-  sendKeyData(-1);
+  inputString = "";
+  lcd.clear();
+  lcd.print(inputString);
+  delay(KEYPAD_DELAY_TIME);
+}
+
+void handleEnterHelper()
+{
   if (inputString == password)
   {
     lcd.clear();
@@ -167,13 +176,17 @@ void handleEnter()
   delay(KEYPAD_DELAY_TIME);
 }
 
+
+void handleEnter()
+{
+  sendKeyData(-1);
+  handleEnterHelper();
+}
+
 void handleReset()
 {
   sendKeyData(-2);
-  inputString = "";
-  lcd.clear();
-  lcd.print(inputString);
-  delay(KEYPAD_DELAY_TIME);
+  handleResetHelper();
 }
 
 void handleUDPKeypadNumber(int key)
@@ -339,13 +352,13 @@ void receiveUDPMessage() {
         switch (value)
         {
         case -1:
-          handleEnter();
+          handleEnterHelper();
           break;
         case -2:
-          handleReset();
+          handleResetHelper();
           break;
         default:
-          handleReset();
+          handleResetHelper();
           break;
         }
       }
