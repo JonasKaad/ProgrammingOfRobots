@@ -563,7 +563,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonTwo
+        m_MethodName: ButtonTwo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -863,7 +863,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonThree
+        m_MethodName: ButtonThree
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2590,7 +2590,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonSeven
+        m_MethodName: ButtonSeven
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3221,7 +3221,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonOne
+        m_MethodName: ButtonOne
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3467,7 +3467,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonEight
+        m_MethodName: ButtonEight
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4296,7 +4296,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonFour
+        m_MethodName: ButtonFour
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4668,7 +4668,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: keypadClear
+        m_MethodName: KeypadClear
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4802,7 +4802,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonFive
+        m_MethodName: ButtonFive
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5360,7 +5360,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: keypadEnter
+        m_MethodName: KeypadEnter
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6412,7 +6412,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonNine
+        m_MethodName: ButtonNine
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6784,7 +6784,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonZero
+        m_MethodName: ButtonZero
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7452,7 +7452,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1881738466}
         m_TargetAssemblyTypeName: Keypad, Assembly-CSharp
-        m_MethodName: buttonSix
+        m_MethodName: ButtonSix
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

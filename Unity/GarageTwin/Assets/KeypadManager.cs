@@ -20,10 +20,10 @@ public class KeypadManager : MonoBehaviour
 
     public void Clear()
     {
-        _keypads.First().buttonClear();
+        _keypads.First().ButtonClear();
     }
     public void Enter()
     { 
-        _keypads.First().buttonEnter();
+        _keypads.First().ButtonEnter();
     }
 }

@@ -1,7 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System;
-using System.Threading;
 
 using UnityEngine;
 using TMPro;
@@ -23,39 +20,36 @@ public class Keypad : MonoBehaviour
     public GameObject button0;
     public GameObject enterButton;
     public GameObject clearButton;
-    private InputAction zeroAction;
-    private InputAction oneAction;
-    private InputAction twoAction;
-    private InputAction threeAction;
-    private InputAction fourAction;
-    private InputAction fiveAction;
-    private InputAction sixAction;
-    private InputAction sevenAction;
-    private InputAction eightAction;
-    private InputAction nineAction;
-    private InputAction enterAction;
-    private InputAction clearAction;
+    private InputAction _zeroAction;
+    private InputAction _oneAction;
+    private InputAction _twoAction;
+    private InputAction _threeAction;
+    private InputAction _fourAction;
+    private InputAction _fiveAction;
+    private InputAction _sixAction;
+    private InputAction _sevenAction;
+    private InputAction _eightAction;
+    private InputAction _nineAction;
+    private InputAction _enterAction;
+    private InputAction _clearAction;
     private UDPManager _udpManager;
-    private bool closed = true;
 
-
-
-    private string password = "1111";
+    private string _password = "1111";
     // Start is called before the first frame update
     void Start()
     {
-        zeroAction = InputSystem.ListEnabledActions().Find(action => action.name == "Zero");
-        oneAction = InputSystem.ListEnabledActions().Find(action => action.name == "One");
-        twoAction = InputSystem.ListEnabledActions().Find(action => action.name == "Two");
-        threeAction = InputSystem.ListEnabledActions().Find(action => action.name == "Three");
-        fourAction = InputSystem.ListEnabledActions().Find(action => action.name == "Four");
-        fiveAction = InputSystem.ListEnabledActions().Find(action => action.name == "Five");
-        sixAction = InputSystem.ListEnabledActions().Find(action => action.name == "Six");
-        sevenAction = InputSystem.ListEnabledActions().Find(action => action.name == "Seven");
-        eightAction = InputSystem.ListEnabledActions().Find(action => action.name == "Eight");
-        nineAction = InputSystem.ListEnabledActions().Find(action => action.name == "Nine");
-        enterAction = InputSystem.ListEnabledActions().Find(action => action.name == "Enter");
-        clearAction = InputSystem.ListEnabledActions().Find(action => action.name == "Clear");
+        _zeroAction = InputSystem.ListEnabledActions().Find(action => action.name == "Zero");
+        _oneAction = InputSystem.ListEnabledActions().Find(action => action.name == "One");
+        _twoAction = InputSystem.ListEnabledActions().Find(action => action.name == "Two");
+        _threeAction = InputSystem.ListEnabledActions().Find(action => action.name == "Three");
+        _fourAction = InputSystem.ListEnabledActions().Find(action => action.name == "Four");
+        _fiveAction = InputSystem.ListEnabledActions().Find(action => action.name == "Five");
+        _sixAction = InputSystem.ListEnabledActions().Find(action => action.name == "Six");
+        _sevenAction = InputSystem.ListEnabledActions().Find(action => action.name == "Seven");
+        _eightAction = InputSystem.ListEnabledActions().Find(action => action.name == "Eight");
+        _nineAction = InputSystem.ListEnabledActions().Find(action => action.name == "Nine");
+        _enterAction = InputSystem.ListEnabledActions().Find(action => action.name == "Enter");
+        _clearAction = InputSystem.ListEnabledActions().Find(action => action.name == "Clear");
         inputPrompt.text = "ENTER PASSWORD:";
         tMP_InputField.characterLimit = 16;
         inputPrompt.characterLimit = 16;
@@ -66,119 +60,119 @@ public class Keypad : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(oneAction.WasPressedThisFrame())
+        if(_oneAction.WasPressedThisFrame())
         {
-            buttonOne();
+            ButtonOne();
         }
 
-        if(twoAction.WasPressedThisFrame())
+        if(_twoAction.WasPressedThisFrame())
         {
-            buttonTwo();
+            ButtonTwo();
         }
 
-        if(threeAction.WasPressedThisFrame())
+        if(_threeAction.WasPressedThisFrame())
         {
-            buttonThree();
+            ButtonThree();
         }
 
-        if(fourAction.WasPressedThisFrame())
+        if(_fourAction.WasPressedThisFrame())
         {
-            buttonFour();
+            ButtonFour();
         }
 
-        if(fiveAction.WasPressedThisFrame())
+        if(_fiveAction.WasPressedThisFrame())
         {
-            buttonFive();
+            ButtonFive();
         }
 
-        if(sixAction.WasPressedThisFrame())
+        if(_sixAction.WasPressedThisFrame())
         {
-            buttonSix();
+            ButtonSix();
         }
 
-        if(sevenAction.WasPressedThisFrame())
+        if(_sevenAction.WasPressedThisFrame())
         {
-            buttonSeven();
+            ButtonSeven();
         }
 
-        if(eightAction.WasPressedThisFrame())
+        if(_eightAction.WasPressedThisFrame())
         {
-            buttonEight();
+            ButtonEight();
         }
 
-        if(nineAction.WasPressedThisFrame())
+        if(_nineAction.WasPressedThisFrame())
         {
-            buttonNine();
+            ButtonNine();
         }
 
-        if(zeroAction.WasPressedThisFrame())
+        if(_zeroAction.WasPressedThisFrame())
         {
-            buttonZero();
+            ButtonZero();
         }
 
-        if(enterAction.WasPressedThisFrame())
+        if(_enterAction.WasPressedThisFrame())
         {
-            keypadEnter();
+            KeypadEnter();
         }
 
-        if(clearAction.WasPressedThisFrame())
+        if(_clearAction.WasPressedThisFrame())
         {
-            keypadClear();
+            KeypadClear();
         }
     }
-    public void buttonOne(){
+    public void ButtonOne(){
         SendMessage("1");
         tMP_InputField.text += "1";
     }
-    public void buttonTwo(){
+    public void ButtonTwo(){
         SendMessage("2");
         tMP_InputField.text += "2";
     }
-    public void buttonThree(){
+    public void ButtonThree(){
         SendMessage("3");
         tMP_InputField.text += "3";
     }
-    public void buttonFour(){
+    public void ButtonFour(){
         SendMessage("4");
         tMP_InputField.text += "4";
     }
-    public void buttonFive(){
+    public void ButtonFive(){
         SendMessage("5");
         tMP_InputField.text += "5";
     }
-    public void buttonSix(){
+    public void ButtonSix(){
         SendMessage("6");
         tMP_InputField.text += "6";
     }
-    public void buttonSeven(){
+    public void ButtonSeven(){
         SendMessage("7");
         tMP_InputField.text += "7";
     }
-    public void buttonEight(){
+    public void ButtonEight(){
         SendMessage("8");
         tMP_InputField.text += "8";
     }
-    public void buttonNine(){
+    public void ButtonNine(){
         SendMessage("9");
         tMP_InputField.text += "9";
     }
-    public void buttonZero(){
+    public void ButtonZero(){
         SendMessage("0");
         tMP_InputField.text += "0";
     }
 
-    public void keypadClear() {
+    public void KeypadClear() {
         SendMessage("-2");
         tMP_InputField.text = null;
     }
-    public void buttonClear() {
+    public void ButtonClear() {
         tMP_InputField.text = null;
     }
 
-    public void keypadEnter()
+    public void KeypadEnter()
     {
         SendMessage("-1");
-        if (tMP_InputField.text == password)
+        if (tMP_InputField.text == _password)
         {
             StartCoroutine(PincodeInput("Correct"));
         }
@@ -187,9 +181,9 @@ public class Keypad : MonoBehaviour
             StartCoroutine(PincodeInput("Wrong"));
         }
     }
-    public void buttonEnter()
+    public void ButtonEnter()
     {
-        if (tMP_InputField.text == password)
+        if (tMP_InputField.text == _password)
         {
             StartCoroutine(PincodeInput("Correct"));
         }
