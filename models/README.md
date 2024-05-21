@@ -29,12 +29,21 @@ To recreate this project, you will need to 3D print the required parts, laser cu
 ## Laser cut designs
 
 - Doors:
+
   <img src="./LasercutDesigns/doors.svg/">
-- Back
+
+- Back:
+
   <img src="./LasercutDesigns/back.svg/">
+
 - Roof:
+
   <img src="./LasercutDesigns/roof.svg/">
+
 - Left side:
+
   <img src="./LasercutDesigns/side_left.svg/">
+
 - Right side:
+
   <img src="./LasercutDesigns/side_right.svg/">
