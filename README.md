@@ -12,6 +12,8 @@ In it we have to design a physical and virtual representation of any given thing
 - Virtual: Unity
 - Communication: Wireless (UDP)
 
+<img src="./readme-assets/garage_inside.png/">
+
 ## Repository
 
 This repository contains all parts of the project:
